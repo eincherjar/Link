@@ -58,17 +58,13 @@ fn set_close_to_tray(state: tauri::State<AppState>, value: bool) {
 #[tauri::command]
 fn connect_rdp(host: String, port: u16, username: String, password: String) -> Result<(), String> {
     let target = format!("TERMSRV/{}:{}", host, port);
-    let output = std::process::Command::new("cmdkey")
+
+    std::process::Command::new("cmdkey")
         .args([&target, &format!("/user:{}", username), &format!("/pass:{}", password)])
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
-        .output()
+        .spawn()
         .map_err(|e| format!("Nie udało się uruchomić cmdkey: {}", e))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("cmdkey nie powiodło się: {}", stderr));
-    }
 
     let address = format!("{}:{}", host, port);
     std::process::Command::new("mstsc.exe")
@@ -122,6 +118,30 @@ fn export_data(path: String, data: String) -> Result<(), String> {
 #[tauri::command]
 fn import_data(path: String) -> Result<String, String> {
     fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn save_app_data(app: tauri::AppHandle, data: String) -> Result<(), String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Nie udało się uzyskać katalogu danych: {}", e))?;
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    fs::write(dir.join("link.json"), data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn load_app_data(app: tauri::AppHandle) -> Result<String, String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Nie udało się uzyskać katalogu danych: {}", e))?;
+    let path = dir.join("link.json");
+    if path.exists() {
+        fs::read_to_string(path).map_err(|e| e.to_string())
+    } else {
+        Ok("".to_string())
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -198,7 +218,7 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![greet, set_close_to_tray, export_data, import_data, connect_rdp, connect_ssh])
+        .invoke_handler(tauri::generate_handler![greet, set_close_to_tray, export_data, import_data, save_app_data, load_app_data, connect_rdp, connect_ssh])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

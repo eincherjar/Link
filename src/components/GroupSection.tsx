@@ -10,6 +10,14 @@ function PlayerPlay({ size = 24, style }: { size?: number; style?: React.CSSProp
   );
 }
 
+function Loader({ size = 14, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 0.8s linear infinite", ...style }}>
+      <path d="M12 2a10 10 0 0 1 10 10" />
+    </svg>
+  );
+}
+
 function Pencil({ size = 24, style }: { size?: number; style?: React.CSSProperties }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
@@ -51,6 +59,7 @@ interface GroupSectionProps {
   connections: Connection[];
   defaultExpanded?: boolean;
   editable?: boolean;
+  connectingId?: string | null;
   onConnect: (conn: Connection) => void;
   onEdit: (conn: Connection) => void;
   onDelete: (conn: Connection) => void;
@@ -64,6 +73,7 @@ export function GroupSection({
   connections,
   defaultExpanded = true,
   editable = true,
+  connectingId,
   onConnect,
   onEdit,
   onDelete,
@@ -151,7 +161,12 @@ export function GroupSection({
               onMouseLeave={() => setHoveredId(null)}
               onDoubleClick={() => onConnect(conn)}
             >
-              {conn.protocol === "SSH" ? (
+              {connectingId === conn.id ? (
+                <Loader
+                  size={14}
+                  style={{ color: "var(--accent)", flexShrink: 0 }}
+                />
+              ) : conn.protocol === "SSH" ? (
                 <Terminal
                   size={14}
                   style={{ color: "var(--accent)", flexShrink: 0 }}
@@ -181,14 +196,20 @@ export function GroupSection({
                 <div className="flex items-center gap-0.5 shrink-0">
                   {hoveredId === conn.id && (
                     <>
-                      <button
-                        onClick={() => onConnect(conn)}
-                        className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
-                        style={{ color: "var(--accent)" }}
-                        title="Połącz"
-                      >
-                        <PlayerPlay size={14} />
-                      </button>
+                      {connectingId === conn.id ? (
+                        <span className="p-1" style={{ color: "var(--accent)" }}>
+                          <Loader size={14} />
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => onConnect(conn)}
+                          className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
+                          style={{ color: "var(--accent)" }}
+                          title="Połącz"
+                        >
+                          <PlayerPlay size={14} />
+                        </button>
+                      )}
                       <button
                         onClick={() => onEdit(conn)}
                         className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"

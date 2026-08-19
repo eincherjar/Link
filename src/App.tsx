@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { TopBar } from "./components/TopBar";
@@ -7,7 +7,6 @@ import { ConnectionModal } from "./components/ConnectionModal";
 import { GroupModal } from "./components/GroupModal";
 import { SettingsModal } from "./components/SettingsModal";
 import { useTheme } from "./hooks/useTheme";
-import { mockConnections, mockGroups } from "./data/mock";
 import type { Connection, Group } from "./types";
 
 export default function App() {
@@ -21,12 +20,38 @@ export default function App() {
     deleteCustomTheme,
   } = useTheme();
 
+  const [loaded, setLoaded] = useState(false);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const loadedRef = useRef(false);
+
   useEffect(() => {
     getCurrentWebviewWindow().show();
+    invoke<string>("load_app_data").then((raw) => {
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          if (data.connections) setConnections(data.connections);
+          if (data.groups) setGroups(data.groups);
+          if (data.themeId) {
+            setTheme(data.themeId);
+            localStorage.setItem("link-theme-id", data.themeId);
+          }
+          if (data.customThemes) {
+            localStorage.setItem("link-custom-themes", JSON.stringify(data.customThemes));
+          }
+        } catch {}
+      }
+      setLoaded(true);
+      loadedRef.current = true;
+    }).catch(() => setLoaded(true));
   }, []);
 
-  const [connections, setConnections] = useState<Connection[]>(mockConnections);
-  const [groups, setGroups] = useState<Group[]>(mockGroups);
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    const data = JSON.stringify({ connections, groups, themeId: activeThemeId, customThemes });
+    invoke("save_app_data", { data }).catch(console.error);
+  }, [connections, groups, activeThemeId, customThemes]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [connModal, setConnModal] = useState<{
@@ -52,6 +77,8 @@ export default function App() {
     open: boolean;
     group?: Group;
   }>({ open: false });
+
+  const [connectingId, setConnectingId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -168,6 +195,7 @@ export default function App() {
   };
 
   const handleConnect = async (conn: Connection) => {
+    setConnectingId(conn.id);
     try {
       if (conn.protocol === "RDP") {
         await invoke("connect_rdp", {
@@ -193,10 +221,14 @@ export default function App() {
       );
     } catch (e) {
       console.error("Błąd połączenia:", e);
+    } finally {
+      setConnectingId(null);
     }
   };
 
   const ungrouped = groupedConnections.get("__ungrouped") ?? [];
+
+  if (!loaded) return null;
 
   return (
     <div className="flex flex-col h-screen" style={{ backgroundColor: "var(--bg-secondary)" }}>
@@ -221,6 +253,7 @@ export default function App() {
               group={group}
               connections={conns}
               defaultExpanded={true}
+              connectingId={connectingId}
               onConnect={handleConnect}
               onEdit={(conn) =>
                 setConnModal({ open: true, mode: "edit", connection: conn })
@@ -245,6 +278,7 @@ export default function App() {
             connections={ungrouped}
             defaultExpanded={true}
             editable={false}
+            connectingId={connectingId}
             onConnect={handleConnect}
             onEdit={(conn) =>
               setConnModal({ open: true, mode: "edit", connection: conn })
