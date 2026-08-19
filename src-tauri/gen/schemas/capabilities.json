@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Default capabilities for the main window","local":true,"windows":["main"],"permissions":["core:default","shell:allow-open","window-state:default","autostart:allow-enable","autostart:allow-disable","autostart:allow-is-enabled","dialog:default","fs:default"]}}
