@@ -13,6 +13,8 @@ interface SettingsModalProps {
   onSelectTheme: (id: string) => void;
   onSaveCustomTheme: (theme: ThemeConfig) => void;
   onDeleteCustomTheme: (id: string) => void;
+  closeToTray: boolean;
+  onToggleCloseToTray: (val: boolean) => void;
   onClose: () => void;
   connections: Connection[];
   groups: Group[];
@@ -190,6 +192,8 @@ export function SettingsModal({
   onSelectTheme,
   onSaveCustomTheme,
   onDeleteCustomTheme,
+  closeToTray,
+  onToggleCloseToTray,
   onClose,
   connections,
   groups,
@@ -199,15 +203,11 @@ export function SettingsModal({
   const [startMinimized, setStartMinimized] = useState(
     () => localStorage.getItem("startMinimized") === "true",
   );
-  const [closeToTray, setCloseToTray] = useState(
-    () => localStorage.getItem("closeToTray") !== "false",
-  );
   const [showEditor, setShowEditor] = useState(false);
   const [editorBase, setEditorBase] = useState<ThemeConfig>(activeTheme);
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
-    invoke("set_close_to_tray", { value: closeToTray });
   }, []);
 
   const toggleAutostart = async (val: boolean) => {
@@ -225,9 +225,7 @@ export function SettingsModal({
   };
 
   const toggleCloseToTray = (val: boolean) => {
-    setCloseToTray(val);
-    localStorage.setItem("closeToTray", String(val));
-    invoke("set_close_to_tray", { value: val });
+    onToggleCloseToTray(val);
   };
 
   const handleExport = async () => {

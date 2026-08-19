@@ -23,6 +23,9 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [closeToTray, setCloseToTray] = useState(
+    () => localStorage.getItem("closeToTray") !== "false"
+  );
   const loadedRef = useRef(false);
 
   useEffect(() => {
@@ -40,7 +43,15 @@ export default function App() {
           if (data.customThemes) {
             localStorage.setItem("link-custom-themes", JSON.stringify(data.customThemes));
           }
+          if (typeof data.closeToTray === "boolean") {
+            setCloseToTray(data.closeToTray);
+            invoke("set_close_to_tray", { value: data.closeToTray });
+          } else {
+            invoke("set_close_to_tray", { value: true });
+          }
         } catch {}
+      } else {
+        invoke("set_close_to_tray", { value: true });
       }
       setLoaded(true);
       loadedRef.current = true;
@@ -49,9 +60,9 @@ export default function App() {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    const data = JSON.stringify({ connections, groups, themeId: activeThemeId, customThemes });
+    const data = JSON.stringify({ connections, groups, themeId: activeThemeId, customThemes, closeToTray });
     invoke("save_app_data", { data }).catch(console.error);
-  }, [connections, groups, activeThemeId, customThemes]);
+  }, [connections, groups, activeThemeId, customThemes, closeToTray]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [connModal, setConnModal] = useState<{
@@ -194,6 +205,12 @@ export default function App() {
     );
   };
 
+  const handleToggleCloseToTray = (val: boolean) => {
+    setCloseToTray(val);
+    localStorage.setItem("closeToTray", String(val));
+    invoke("set_close_to_tray", { value: val });
+  };
+
   const handleConnect = async (conn: Connection) => {
     setConnectingId(conn.id);
     try {
@@ -330,6 +347,8 @@ export default function App() {
           onSelectTheme={setTheme}
           onSaveCustomTheme={saveCustomTheme}
           onDeleteCustomTheme={deleteCustomTheme}
+          closeToTray={closeToTray}
+          onToggleCloseToTray={handleToggleCloseToTray}
           onClose={() => setSettingsOpen(false)}
           connections={connections}
           groups={groups}
