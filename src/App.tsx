@@ -8,7 +8,8 @@ import { GroupModal } from "./components/GroupModal";
 import { SettingsModal } from "./components/SettingsModal";
 import { useTheme } from "./hooks/useTheme";
 import { I18nProvider, useTranslation } from "./i18n/provider";
-import type { Connection, Group } from "./types";
+import type { Connection, Group, ImportStrategy } from "./types";
+import { connectionKey } from "./types";
 import type { Language } from "./i18n/provider";
 
 function AppInner() {
@@ -365,10 +366,16 @@ function AppInner() {
           onClose={() => setSettingsOpen(false)}
           connections={connections}
           groups={groups}
-          onImport={(newConns, newGroups) => {
-            setConnections(newConns);
-            if (newGroups.length > 0) setGroups(newGroups);
-            setSettingsOpen(false);
+          onImport={(newConns, _newGroups, strategy: ImportStrategy) => {
+            if (strategy === "replace") {
+              setConnections(newConns);
+            } else {
+              setConnections((prev) => {
+                const existingKeys = new Set(prev.map(connectionKey));
+                const toAdd = newConns.filter((c) => !existingKeys.has(connectionKey(c)));
+                return [...prev, ...toAdd];
+              });
+            }
           }}
           onClearAll={() => {
             setConnections([]);

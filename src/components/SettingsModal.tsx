@@ -3,7 +3,7 @@ import { X, Trash2, Download, Upload, Palette } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { save, open } from "@tauri-apps/plugin-dialog";
-import { connectionKey, type ImportStrategy } from "../types";
+import { type ImportStrategy } from "../types";
 import type { ThemeConfig, Connection, Group } from "../types";
 import type { Language } from "../i18n/provider";
 import { useTranslation, getAllBuiltinKeys } from "../i18n/provider";
@@ -26,7 +26,7 @@ interface SettingsModalProps {
   onClose: () => void;
   connections: Connection[];
   groups: Group[];
-  onImport: (connections: Connection[], groups: Group[]) => void;
+  onImport: (connections: Connection[], groups: Group[], strategy: ImportStrategy) => void;
   onClearAll: () => void;
 }
 
@@ -289,17 +289,7 @@ export function SettingsModal({
 
   const handleImportConfirm = (strategy: ImportStrategy) => {
     if (!importPreview) return;
-
-    if (strategy === "replace") {
-      onImport(importPreview, []);
-    } else {
-      const existingKeys = new Set(connections.map(connectionKey));
-      const newConns = strategy === "merge"
-        ? [...connections, ...importPreview.filter((c) => !existingKeys.has(connectionKey(c)))]
-        : [...connections, ...importPreview.filter((c) => !existingKeys.has(connectionKey(c)))];
-      onImport(newConns, groups);
-    }
-
+    onImport(importPreview, [], strategy);
     setImportPreview(null);
   };
 
