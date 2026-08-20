@@ -367,13 +367,19 @@ function AppInner() {
           onClose={() => setSettingsOpen(false)}
           connections={connections}
           groups={groups}
-          onImport={(newConns, _newGroups, strategy: ImportStrategy) => {
+          onImport={(newConns, newGroups, strategy: ImportStrategy) => {
             if (strategy === "replace") {
               setConnections(newConns);
+              if (newGroups.length > 0) setGroups(newGroups);
             } else {
               setConnections((prev) => {
                 const existingKeys = new Set(prev.map(connectionKey));
                 const toAdd = newConns.filter((c) => !existingKeys.has(connectionKey(c)));
+                return [...prev, ...toAdd];
+              });
+              setGroups((prev) => {
+                const existingNames = new Set(prev.map((g) => g.name.toLowerCase()));
+                const toAdd = newGroups.filter((g) => !existingNames.has(g.name.toLowerCase()));
                 return [...prev, ...toAdd];
               });
             }

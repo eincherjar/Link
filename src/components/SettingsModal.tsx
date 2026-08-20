@@ -239,6 +239,7 @@ export function SettingsModal({
   const [editingLangName, setEditingLangName] = useState("");
   const [showLangInput, setShowLangInput] = useState(false);
   const [importPreview, setImportPreview] = useState<Connection[] | null>(null);
+  const [importGroups, setImportGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
@@ -283,14 +284,16 @@ export function SettingsModal({
       const data = JSON.parse(contents);
       if (data.connections) {
         setImportPreview(data.connections);
+        setImportGroups(data.groups ?? []);
       }
     }
   };
 
   const handleImportConfirm = (strategy: ImportStrategy) => {
     if (!importPreview) return;
-    onImport(importPreview, [], strategy);
+    onImport(importPreview, importGroups, strategy);
     setImportPreview(null);
+    setImportGroups([]);
   };
 
   const handleExportThemes = async () => {
@@ -668,9 +671,11 @@ export function SettingsModal({
     {importPreview && (
       <ImportPreviewModal
         currentConnections={connections}
+        currentGroups={groups}
         importedConnections={importPreview}
+        importedGroups={importGroups}
         onConfirm={handleImportConfirm}
-        onClose={() => setImportPreview(null)}
+        onClose={() => { setImportPreview(null); setImportGroups([]); }}
       />
     )}
     </>

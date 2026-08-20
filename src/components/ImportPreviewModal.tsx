@@ -1,18 +1,22 @@
 import { useState, useMemo } from "react";
 import { X, AlertTriangle, Plus, Minus } from "lucide-react";
 import { useTranslation } from "../i18n/provider";
-import { connectionKey, type Connection, type ImportStrategy } from "../types";
+import { connectionKey, type Connection, type Group, type ImportStrategy } from "../types";
 
 interface ImportPreviewModalProps {
   currentConnections: Connection[];
+  currentGroups: Group[];
   importedConnections: Connection[];
+  importedGroups: Group[];
   onConfirm: (strategy: ImportStrategy) => void;
   onClose: () => void;
 }
 
 export function ImportPreviewModal({
   currentConnections,
+  currentGroups,
   importedConnections,
+  importedGroups,
   onConfirm,
   onClose,
 }: ImportPreviewModalProps) {
@@ -208,6 +212,39 @@ export function ImportPreviewModal({
               )}
             </div>
           </div>
+
+          {importedGroups.length > 0 && (
+            <div>
+              <span
+                className="block text-xs font-medium mb-2"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Grupy ({importedGroups.length})
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {importedGroups.map((g) => {
+                  const isNew = !currentGroups.some((cg) => cg.name.toLowerCase() === g.name.toLowerCase());
+                  return (
+                    <span
+                      key={g.id}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+                      style={{
+                        backgroundColor: isNew ? "var(--accent-blue)" : "var(--bg-tertiary)",
+                        color: isNew ? "var(--bg-primary)" : "var(--text-secondary)",
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: g.color }}
+                      />
+                      {g.name}
+                      {isNew && <Plus size={10} />}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div
             className="text-xs rounded-lg px-3 py-2"
