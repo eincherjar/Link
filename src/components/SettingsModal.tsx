@@ -233,6 +233,7 @@ export function SettingsModal({
   const [editorBase, setEditorBase] = useState<ThemeConfig>(activeTheme);
   const [showTranslations, setShowTranslations] = useState(false);
   const [editingLangName, setEditingLangName] = useState("");
+  const [showLangInput, setShowLangInput] = useState(false);
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
@@ -349,7 +350,14 @@ export function SettingsModal({
               <div className="flex items-center gap-1.5">
                 <select
                   value={lang}
-                  onChange={(e) => onLangChange(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "__new__") {
+                      setShowLangInput(true);
+                    } else {
+                      onLangChange(val);
+                    }
+                  }}
                   className="px-2 py-1 rounded-lg text-xs border outline-none"
                   style={{
                     backgroundColor: "var(--bg-tertiary)",
@@ -359,27 +367,74 @@ export function SettingsModal({
                 >
                   <option value="pl">{t["lang.pl"]}</option>
                   <option value="en">{t["lang.en"]}</option>
+                  <option value="__new__">+ Nowy język...</option>
                 </select>
+              </div>
+            </div>
+
+            {showLangInput && (
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="text"
+                  autoFocus
+                  value={editingLangName}
+                  onChange={(e) => setEditingLangName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && editingLangName.trim()) {
+                      const id = `custom-${editingLangName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+                      onLangChange(id);
+                      setShowLangInput(false);
+                      setShowTranslations(true);
+                    }
+                    if (e.key === "Escape") {
+                      setShowLangInput(false);
+                      setEditingLangName("");
+                    }
+                  }}
+                  placeholder={t["settings.language"]}
+                  className="flex-1 px-2 py-1 rounded-lg text-xs border outline-none"
+                  style={{
+                    backgroundColor: "var(--bg-tertiary)",
+                    borderColor: "var(--border)",
+                    color: "var(--text-primary)",
+                  }}
+                />
                 <button
                   onClick={() => {
-                    const name = prompt("Nazwa języka / Language name:");
-                    if (name) {
-                      const id = `custom-${name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
-                      setEditingLangName(name);
+                    if (editingLangName.trim()) {
+                      const id = `custom-${editingLangName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
                       onLangChange(id);
+                      setShowLangInput(false);
                       setShowTranslations(true);
                     }
                   }}
                   className="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
-                  style={btnStyle}
+                  style={{
+                    backgroundColor: "var(--accent-blue)",
+                    color: "var(--bg-primary)",
+                  }}
                 >
-                  + {t["settings.newTheme"]}
+                  {t["common.add"]}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLangInput(false);
+                    setEditingLangName("");
+                  }}
+                  className="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
+                  style={{
+                    backgroundColor: "var(--bg-tertiary)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {t["common.cancel"]}
                 </button>
               </div>
-            </div>
+            )}
           </div>
 
-          {showTranslations && (
+          {showTranslations && !showLangInput && (
             <>
               <div className="w-full h-px" style={{ backgroundColor: "var(--border)" }} />
               <div>
@@ -387,16 +442,6 @@ export function SettingsModal({
                   <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
                     {editingLangName || lang} — {Object.keys(customTranslations).length} kluczy
                   </span>
-                  <button
-                    onClick={() => {
-                      const name = prompt("Nazwa języka / Language name:", editingLangName);
-                      if (name) setEditingLangName(name);
-                    }}
-                    className="text-xs"
-                    style={{ color: "var(--accent-blue)" }}
-                  >
-                    Zmień nazwę
-                  </button>
                 </div>
                 <div className="space-y-1.5 max-h-64 overflow-y-auto">
                   {getAllBuiltinKeys().map(({ key, pl: plVal, en: enVal }) => (
@@ -422,6 +467,21 @@ export function SettingsModal({
                       />
                     </div>
                   ))}
+                </div>
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => {
+                      setShowTranslations(false);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                    style={{
+                      backgroundColor: "var(--bg-tertiary)",
+                      color: "var(--text-secondary)",
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    {t["common.cancel"]}
+                  </button>
                 </div>
               </div>
             </>
