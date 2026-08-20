@@ -7,9 +7,11 @@ import { ConnectionModal } from "./components/ConnectionModal";
 import { GroupModal } from "./components/GroupModal";
 import { SettingsModal } from "./components/SettingsModal";
 import { useTheme } from "./hooks/useTheme";
+import { I18nProvider, useTranslation } from "./i18n/provider";
 import type { Connection, Group } from "./types";
+import type { Language } from "./i18n/provider";
 
-export default function App() {
+function AppInner() {
   const {
     activeTheme,
     activeThemeId,
@@ -19,6 +21,8 @@ export default function App() {
     saveCustomTheme,
     deleteCustomTheme,
   } = useTheme();
+
+  const { t, lang, setLang, custom: customTranslations, setCustomTranslations } = useTranslation();
 
   const [loaded, setLoaded] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -49,6 +53,8 @@ export default function App() {
           } else {
             invoke("set_close_to_tray", { value: true });
           }
+          if (data.language) setLang(data.language);
+          if (data.customTranslations) setCustomTranslations(data.customTranslations);
         } catch {}
       } else {
         invoke("set_close_to_tray", { value: true });
@@ -60,9 +66,12 @@ export default function App() {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    const data = JSON.stringify({ connections, groups, themeId: activeThemeId, customThemes, closeToTray });
+    const data = JSON.stringify({
+      connections, groups, themeId: activeThemeId, customThemes,
+      closeToTray, language: lang, customTranslations,
+    });
     invoke("save_app_data", { data }).catch(console.error);
-  }, [connections, groups, activeThemeId, customThemes, closeToTray]);
+  }, [connections, groups, activeThemeId, customThemes, closeToTray, lang, customTranslations]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [connModal, setConnModal] = useState<{
@@ -291,7 +300,7 @@ export default function App() {
 
         {ungrouped.length > 0 && (
           <GroupSection
-            group={{ id: "__ungrouped", name: "Bez grupy", color: "var(--text-secondary)" }}
+            group={{ id: "__ungrouped", name: t["group.ungrouped"], color: "var(--text-secondary)" }}
             connections={ungrouped}
             defaultExpanded={true}
             editable={false}
@@ -314,7 +323,7 @@ export default function App() {
             className="flex items-center justify-center h-40 text-sm"
             style={{ color: "var(--text-secondary)" }}
           >
-            Brak pasujacych polaczen
+            {t["empty.noConnections"]}
           </div>
         )}
       </div>
@@ -349,6 +358,10 @@ export default function App() {
           onDeleteCustomTheme={deleteCustomTheme}
           closeToTray={closeToTray}
           onToggleCloseToTray={handleToggleCloseToTray}
+          lang={lang}
+          onLangChange={setLang}
+          customTranslations={customTranslations}
+          onCustomTranslationsChange={setCustomTranslations}
           onClose={() => setSettingsOpen(false)}
           connections={connections}
           groups={groups}
@@ -375,13 +388,13 @@ export default function App() {
               className="text-sm font-semibold mb-2"
               style={{ color: "var(--text-primary)" }}
             >
-              Usuń połączenie
+              {t["confirm.deleteConnection"]}
             </h3>
             <p
               className="text-xs mb-4"
               style={{ color: "var(--text-secondary)" }}
             >
-              Czy na pewno chcesz usunąć <strong style={{ color: "var(--text-primary)" }}>{deleteConfirm.connection.name}</strong>?
+              {t["confirm.deleteConnectionText"]} <strong style={{ color: "var(--text-primary)" }}>{deleteConfirm.connection.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -392,7 +405,7 @@ export default function App() {
                   color: "var(--text-primary)",
                 }}
               >
-                Anuluj
+                {t["common.cancel"]}
               </button>
               <button
                 onClick={handleDeleteConnection}
@@ -402,7 +415,7 @@ export default function App() {
                   color: "#fff",
                 }}
               >
-                Usuń
+                {t["common.delete"]}
               </button>
             </div>
           </div>
@@ -424,13 +437,13 @@ export default function App() {
               className="text-sm font-semibold mb-2"
               style={{ color: "var(--text-primary)" }}
             >
-              Usuń grupę
+              {t["confirm.deleteGroup"]}
             </h3>
             <p
               className="text-xs mb-4"
               style={{ color: "var(--text-secondary)" }}
             >
-              Czy na pewno chcesz usunąć grupę <strong style={{ color: "var(--text-primary)" }}>{deleteGroupConfirm.group.name}</strong>? Połączenia w tej grupie zostaną przeniesione do "Bez grupy".
+              {t["confirm.deleteGroupText"]} <strong style={{ color: "var(--text-primary)" }}>{deleteGroupConfirm.group.name}</strong>? {t["confirm.deleteGroupHint"]}
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -441,7 +454,7 @@ export default function App() {
                   color: "var(--text-primary)",
                 }}
               >
-                Anuluj
+                {t["common.cancel"]}
               </button>
               <button
                 onClick={handleDeleteGroup}
@@ -451,12 +464,43 @@ export default function App() {
                   color: "#fff",
                 }}
               >
-                Usuń
+                {t["common.delete"]}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function App() {
+  const [lang, setLang] = useState<Language>(() =>
+    (localStorage.getItem("link-language") as Language) || "pl"
+  );
+  const [customTranslations, setCustomTranslations] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem("link-custom-translations") || "{}"); }
+    catch { return {}; }
+  });
+
+  const handleLangChange = (l: Language) => {
+    setLang(l);
+    localStorage.setItem("link-language", l);
+  };
+
+  const handleCustomChange = (c: Record<string, string>) => {
+    setCustomTranslations(c);
+    localStorage.setItem("link-custom-translations", JSON.stringify(c));
+  };
+
+  return (
+    <I18nProvider
+      initialLang={lang}
+      initialCustom={customTranslations}
+      onLangChange={handleLangChange}
+      onCustomChange={handleCustomChange}
+    >
+      <AppInner />
+    </I18nProvider>
   );
 }

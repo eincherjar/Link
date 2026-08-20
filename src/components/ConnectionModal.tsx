@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Terminal, Monitor, Eye, EyeOff } from "lucide-react";
 import { CustomSelect } from "./CustomSelect";
+import { useTranslation } from "../i18n/provider";
 import type { Connection, Group, Protocol } from "../types";
 
 interface ConnectionModalProps {
@@ -18,6 +19,7 @@ export function ConnectionModal({
   onSave,
   onClose,
 }: ConnectionModalProps) {
+  const { t } = useTranslation();
   const [host, setHost] = useState(connection?.host ?? "");
   const [port, setPort] = useState(connection?.port?.toString() ?? "22");
   const [name, setName] = useState(connection?.name ?? "");
@@ -93,7 +95,7 @@ export function ConnectionModal({
             className="text-sm font-semibold"
             style={{ color: "var(--text-primary)" }}
           >
-            {mode === "add" ? "Nowe połączenie" : "Edytuj połączenie"}
+            {mode === "add" ? t["connection.new"] : t["connection.edit"]}
           </h2>
           <button onClick={onClose} style={{ color: "var(--text-secondary)" }}>
             <X size={18} />
@@ -107,7 +109,7 @@ export function ConnectionModal({
                 className="block text-xs font-medium mb-1"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Host
+                {t["connection.host"]}
               </label>
               <input
                 type="text"
@@ -124,7 +126,7 @@ export function ConnectionModal({
                 className="block text-xs font-medium mb-1"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Port
+                {t["connection.port"]}
               </label>
               <input
                 type="number"
@@ -142,7 +144,7 @@ export function ConnectionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              Nazwa
+              {t["common.name"]}
             </label>
             <input
               type="text"
@@ -193,13 +195,13 @@ export function ConnectionModal({
                 className="block text-xs font-medium mb-1"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Grupa
+                {t["connection.group"]}
               </label>
               <CustomSelect
                 value={groupId}
                 onChange={setGroupId}
                 options={[
-                  { value: "", label: "Brak" },
+                  { value: "", label: t["connection.noGroup"] },
                   ...groups.map((g) => ({ value: g.id, label: g.name })),
                 ]}
                 style={fieldStyle}
@@ -212,7 +214,7 @@ export function ConnectionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              Użytkownik
+              {t["connection.username"]}
             </label>
             <input
               type="text"
@@ -231,14 +233,14 @@ export function ConnectionModal({
                   className="block text-xs font-medium mb-1"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Typ auth
+                  {t["connection.authType"]}
                 </label>
                 <CustomSelect
                   value={authType}
                   onChange={(v) => setAuthType(v as "password" | "key")}
                   options={[
-                    { value: "password", label: "Hasło" },
-                    { value: "key", label: "Klucz SSH" },
+                    { value: "password", label: t["connection.authPassword"] },
+                    { value: "key", label: t["connection.authKey"] },
                   ]}
                   style={fieldStyle}
                 />
@@ -248,7 +250,7 @@ export function ConnectionModal({
                   className="block text-xs font-medium mb-1"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  {authType === "password" ? "Hasło" : "Ścieżka do klucza"}
+                  {authType === "password" ? t["connection.authPassword"] : t["connection.keyPath"]}
                 </label>
                 <div className="relative">
                   <input
@@ -287,7 +289,7 @@ export function ConnectionModal({
                 className="block text-xs font-medium mb-1"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Hasło
+                {t["connection.authPassword"]}
               </label>
               <div className="relative">
                 <input
@@ -323,7 +325,7 @@ export function ConnectionModal({
                 color: "var(--text-secondary)",
               }}
             >
-              Anuluj
+              {t["common.cancel"]}
             </button>
             <button
               type="submit"
@@ -333,7 +335,7 @@ export function ConnectionModal({
                 color: "var(--bg-primary)",
               }}
             >
-              {mode === "add" ? "Dodaj" : "Zapisz"}
+              {mode === "add" ? t["common.add"] : t["common.save"]}
             </button>
           </div>
         </form>

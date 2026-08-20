@@ -4,6 +4,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { ThemeConfig, Connection, Group } from "../types";
+import type { Language } from "../i18n/provider";
+import { useTranslation } from "../i18n/provider";
 
 interface SettingsModalProps {
   activeTheme: ThemeConfig;
@@ -15,6 +17,10 @@ interface SettingsModalProps {
   onDeleteCustomTheme: (id: string) => void;
   closeToTray: boolean;
   onToggleCloseToTray: (val: boolean) => void;
+  lang: Language;
+  onLangChange: (lang: Language) => void;
+  customTranslations: Record<string, string>;
+  onCustomTranslationsChange: (custom: Record<string, string>) => void;
   onClose: () => void;
   connections: Connection[];
   groups: Group[];
@@ -47,17 +53,17 @@ function Toggle({
   );
 }
 
-const COLOR_FIELDS: { key: keyof ThemeConfig["colors"]; label: string }[] = [
-  { key: "bgPrimary", label: "Tło główne" },
-  { key: "bgSecondary", label: "Tło drugorzędne" },
-  { key: "bgTertiary", label: "Tło trzeciorzędne" },
-  { key: "accent", label: "Akcent" },
-  { key: "accentBlue", label: "Akcent niebieski" },
-  { key: "accentPurple", label: "Akcent fioletowy" },
-  { key: "accentRed", label: "Akcent czerwony" },
-  { key: "textPrimary", label: "Tekst główny" },
-  { key: "textSecondary", label: "Tekst drugorzędny" },
-  { key: "border", label: "Obramowanie" },
+const COLOR_FIELDS: { key: keyof ThemeConfig["colors"] }[] = [
+  { key: "bgPrimary" },
+  { key: "bgSecondary" },
+  { key: "bgTertiary" },
+  { key: "accent" },
+  { key: "accentBlue" },
+  { key: "accentPurple" },
+  { key: "accentRed" },
+  { key: "textPrimary" },
+  { key: "textSecondary" },
+  { key: "border" },
 ];
 
 function ThemeCard({
@@ -71,6 +77,7 @@ function ThemeCard({
   onSelect: () => void;
   onDelete?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       onClick={onSelect}
@@ -94,7 +101,7 @@ function ThemeCard({
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="absolute top-1.5 right-1.5 p-0.5 rounded transition-colors hover:bg-[var(--bg-secondary)]"
           style={{ color: "var(--accent-red)" }}
-          title="Usuń motyw"
+          title={t["settings.deleteTheme"]}
         >
           <Trash2 size={10} />
         </button>
@@ -112,7 +119,8 @@ function ThemeEditor({
   onSave: (theme: ThemeConfig) => void;
   onCancel: () => void;
 }) {
-  const [name, setName] = useState(baseTheme.name + " (kopie)");
+  const { t } = useTranslation();
+  const [name, setName] = useState(baseTheme.name + " " + t["settings.themeCopy"]);
   const [colors, setColors] = useState({ ...baseTheme.colors });
 
   const setColor = (key: keyof ThemeConfig["colors"], value: string) => {
@@ -128,6 +136,19 @@ function ThemeEditor({
     });
   };
 
+  const themeColorLabels: Record<string, string> = {
+    bgPrimary: t["theme.bgPrimary"],
+    bgSecondary: t["theme.bgSecondary"],
+    bgTertiary: t["theme.bgTertiary"],
+    accent: t["theme.accent"],
+    accentBlue: t["theme.accentBlue"],
+    accentPurple: t["theme.accentPurple"],
+    accentRed: t["theme.accentRed"],
+    textPrimary: t["theme.textPrimary"],
+    textSecondary: t["theme.textSecondary"],
+    border: t["theme.border"],
+  };
+
   return (
     <div className="space-y-3">
       <input
@@ -140,11 +161,11 @@ function ThemeEditor({
           borderColor: "var(--border)",
           color: "var(--text-primary)",
         }}
-        placeholder="Nazwa motywu"
+        placeholder={t["settings.themeName"]}
       />
 
       <div className="grid grid-cols-2 gap-2">
-        {COLOR_FIELDS.map(({ key, label }) => (
+        {COLOR_FIELDS.map(({ key }) => (
           <div key={key} className="flex items-center gap-2">
             <input
               type="color"
@@ -154,7 +175,7 @@ function ThemeEditor({
             />
             <div className="min-w-0">
               <span className="text-xs block truncate" style={{ color: "var(--text-secondary)" }}>
-                {label}
+                {themeColorLabels[key]}
               </span>
               <span className="text-xs font-mono block" style={{ color: "var(--text-secondary)" }}>
                 {colors[key]}
@@ -170,14 +191,14 @@ function ThemeEditor({
           className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
           style={{ backgroundColor: "var(--accent)", color: "var(--bg-primary)" }}
         >
-          Zapisz
+          {t["common.save"]}
         </button>
         <button
           onClick={onCancel}
           className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
           style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-primary)" }}
         >
-          Anuluj
+          {t["common.cancel"]}
         </button>
       </div>
     </div>
@@ -194,17 +215,23 @@ export function SettingsModal({
   onDeleteCustomTheme,
   closeToTray,
   onToggleCloseToTray,
+  lang,
+  onLangChange,
+  customTranslations,
+  onCustomTranslationsChange,
   onClose,
   connections,
   groups,
   onImport,
 }: SettingsModalProps) {
+  const { t } = useTranslation();
   const [autostart, setAutostart] = useState(false);
   const [startMinimized, setStartMinimized] = useState(
     () => localStorage.getItem("startMinimized") === "true",
   );
   const [showEditor, setShowEditor] = useState(false);
   const [editorBase, setEditorBase] = useState<ThemeConfig>(activeTheme);
+  const [showTranslations, setShowTranslations] = useState(false);
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
@@ -307,7 +334,7 @@ export function SettingsModal({
           style={{ borderColor: "var(--border)" }}
         >
           <h2 className="text-sm font-semibold" style={labelStyle}>
-            Ustawienia
+            {t["settings.title"]}
           </h2>
           <button onClick={onClose} style={{ color: "var(--text-secondary)" }}>
             <X size={18} />
@@ -317,7 +344,31 @@ export function SettingsModal({
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm" style={labelStyle}>Motyw</span>
+              <span className="text-sm" style={labelStyle}>{t["settings.language"]}</span>
+              <select
+                value={lang}
+                onChange={(e) => onLangChange(e.target.value)}
+                className="px-2 py-1 rounded-lg text-xs border outline-none"
+                style={{
+                  backgroundColor: "var(--bg-tertiary)",
+                  borderColor: "var(--border)",
+                  color: "var(--text-primary)",
+                }}
+              >
+                <option value="pl">{t["lang.pl"]}</option>
+                <option value="en">{t["lang.en"]}</option>
+              </select>
+            </div>
+          </div>
+
+          <div
+            className="w-full h-px"
+            style={{ backgroundColor: "var(--border)" }}
+          />
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm" style={labelStyle}>{t["settings.theme"]}</span>
               <button
                 onClick={() => {
                   setEditorBase(activeTheme);
@@ -326,7 +377,7 @@ export function SettingsModal({
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
                 style={btnStyle}
               >
-                <Palette size={12} /> Nowy
+                <Palette size={12} /> {t["settings.newTheme"]}
               </button>
             </div>
 
@@ -342,15 +393,15 @@ export function SettingsModal({
               />
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {allThemes.map((t) => (
+                {allThemes.map((th) => (
                   <ThemeCard
-                    key={t.id}
-                    theme={t}
-                    active={t.id === activeThemeId}
-                    onSelect={() => onSelectTheme(t.id)}
+                    key={th.id}
+                    theme={th}
+                    active={th.id === activeThemeId}
+                    onSelect={() => onSelectTheme(th.id)}
                     onDelete={
-                      !t.builtIn
-                        ? () => onDeleteCustomTheme(t.id)
+                      !th.builtIn
+                        ? () => onDeleteCustomTheme(th.id)
                         : undefined
                     }
                   />
@@ -365,17 +416,17 @@ export function SettingsModal({
           />
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={labelStyle}>Uruchom z systemem</span>
+            <span className="text-sm" style={labelStyle}>{t["settings.autostart"]}</span>
             <Toggle checked={autostart} onChange={toggleAutostart} />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={labelStyle}>Uruchom zminimalizowane</span>
+            <span className="text-sm" style={labelStyle}>{t["settings.startMinimized"]}</span>
             <Toggle checked={startMinimized} onChange={toggleStartMinimized} />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={labelStyle}>Zamknij do tray</span>
+            <span className="text-sm" style={labelStyle}>{t["settings.closeToTray"]}</span>
             <Toggle checked={closeToTray} onChange={toggleCloseToTray} />
           </div>
 
@@ -386,14 +437,14 @@ export function SettingsModal({
 
           <div>
             <span className="text-xs font-medium block mb-2" style={{ color: "var(--text-secondary)" }}>
-              Skróty klawiszowe
+              {t["settings.shortcuts"]}
             </span>
             <div className="space-y-1.5">
               {[
-                { keys: "Ctrl + F", label: "Szukaj" },
-                { keys: "Ctrl + N", label: "Nowe połączenie" },
-                { keys: "Ctrl + G", label: "Nowa grupa" },
-                { keys: "Esc", label: "Zamknij okno" },
+                { keys: "Ctrl + F", label: t["settings.shortcutSearch"] },
+                { keys: "Ctrl + N", label: t["settings.shortcutNewConnection"] },
+                { keys: "Ctrl + G", label: t["settings.shortcutNewGroup"] },
+                { keys: "Esc", label: t["settings.shortcutClose"] },
               ].map((s) => (
                 <div key={s.keys} className="flex items-center justify-between">
                   <span className="text-xs" style={labelStyle}>{s.label}</span>
@@ -422,14 +473,14 @@ export function SettingsModal({
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
               style={btnStyle}
             >
-              Eksportuj dane
+              {t["settings.exportData"]}
             </button>
             <button
               onClick={handleImport}
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
               style={btnStyle}
             >
-              Importuj dane
+              {t["settings.importData"]}
             </button>
           </div>
 
@@ -439,16 +490,58 @@ export function SettingsModal({
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
               style={btnStyle}
             >
-              <Download size={12} /> Eksportuj motywy
+              <Download size={12} /> {t["settings.exportThemes"]}
             </button>
             <button
               onClick={handleImportThemes}
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
               style={btnStyle}
             >
-              <Upload size={12} /> Importuj motywy
+              <Upload size={12} /> {t["settings.importThemes"]}
             </button>
           </div>
+
+          {lang !== "pl" && lang !== "en" && (
+            <>
+              <div className="w-full h-px" style={{ backgroundColor: "var(--border)" }} />
+              <div>
+                <button
+                  onClick={() => setShowTranslations(!showTranslations)}
+                  className="text-xs font-medium mb-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Tłumaczenia ({Object.keys(customTranslations).length} {lang})
+                </button>
+                {showTranslations && (
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {Object.entries(t).map(([key, val]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <span className="text-xs shrink-0 w-32 truncate" style={{ color: "var(--text-secondary)" }}>
+                          {key}
+                        </span>
+                        <input
+                          type="text"
+                          value={customTranslations[key] ?? ""}
+                          onChange={(e) => {
+                            const updated = { ...customTranslations, [key]: e.target.value };
+                            if (!e.target.value) delete updated[key];
+                            onCustomTranslationsChange(updated);
+                          }}
+                          className="flex-1 px-2 py-1 rounded text-xs border outline-none"
+                          style={{
+                            backgroundColor: "var(--bg-primary)",
+                            borderColor: "var(--border)",
+                            color: "var(--text-primary)",
+                          }}
+                          placeholder={String(val)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import {
     Search,
     X,
 } from "lucide-react";
+import { useTranslation } from "../i18n/provider";
 
 function DeviceImacPlus({ size = 24 }: { size?: number }) {
     return (
@@ -50,6 +51,7 @@ export function TopBar({
     onAddGroup,
     onOpenSettings,
 }: TopBarProps) {
+    const { t } = useTranslation();
     return (
         <div
             className="shrink-0"
@@ -67,7 +69,7 @@ export function TopBar({
                         <input
                             id="search-input"
                             type="text"
-                            placeholder="Szukaj..."
+                            placeholder={t["topbar.search"]}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             className="bg-transparent border-none outline-none text-xs min-w-0 flex-1 placeholder-opacity-50"
@@ -90,7 +92,7 @@ export function TopBar({
                             onClick={onAddConnection}
                             className="p-1.5 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                             style={{ color: "var(--accent)" }}
-                            title="Dodaj połączenie"
+                            title={t["topbar.addConnection"]}
                         >
                             <DeviceImacPlus size={18} />
                         </button>
@@ -99,7 +101,7 @@ export function TopBar({
                             onClick={onAddGroup}
                             className="p-1.5 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                             style={{ color: "var(--accent-blue)" }}
-                            title="Dodaj grupę"
+                            title={t["topbar.addGroup"]}
                         >
                             <FolderPlus size={18} />
                         </button>
@@ -114,7 +116,7 @@ export function TopBar({
                         onClick={onOpenSettings}
                         className="p-1.5 rounded transition-colors hover:bg-[var(--bg-tertiary)] shrink-0"
                         style={{ color: "var(--text-secondary)" }}
-                        title="Ustawienia"
+                        title={t["topbar.settings"]}
                     >
                         <Settings size={18} />
                     </button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown, Terminal, Monitor } from "lucide-react";
+import { useTranslation } from "../i18n/provider";
 import type { Connection, Group } from "../types";
 
 function PlayerPlay({ size = 24, style }: { size?: number; style?: React.CSSProperties }) {
@@ -81,6 +82,7 @@ export function GroupSection({
   onDeleteGroup,
   onToggleFavorite,
 }: GroupSectionProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredGroup, setHoveredGroup] = useState(false);
@@ -124,7 +126,7 @@ export function GroupSection({
               onClick={() => onEditGroup(group)}
               className="p-1 rounded transition-colors hover:bg-[var(--bg-secondary)] shrink-0"
               style={{ color: "var(--text-secondary)" }}
-              title="Edytuj grupę"
+              title={t["group.editGroup"]}
             >
               <Pencil size={14} />
             </button>
@@ -132,7 +134,7 @@ export function GroupSection({
               onClick={() => onDeleteGroup(group)}
               className="p-1 rounded transition-colors hover:bg-[var(--bg-secondary)] shrink-0"
               style={{ color: "var(--accent-red)" }}
-              title="Usuń grupę"
+              title={t["group.deleteGroup"]}
             >
               <Trash size={14} />
             </button>
@@ -205,7 +207,7 @@ export function GroupSection({
                           onClick={() => onConnect(conn)}
                           className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                           style={{ color: "var(--accent)" }}
-                          title="Połącz"
+                          title={t["group.connect"]}
                         >
                           <PlayerPlay size={14} />
                         </button>
@@ -214,7 +216,7 @@ export function GroupSection({
                         onClick={() => onEdit(conn)}
                         className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                         style={{ color: "var(--text-secondary)" }}
-                        title="Edytuj"
+                        title={t["group.edit"]}
                       >
                         <Pencil size={14} />
                       </button>
@@ -222,7 +224,7 @@ export function GroupSection({
                         onClick={() => onDelete(conn)}
                         className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                         style={{ color: "var(--accent-red)" }}
-                        title="Usuń"
+                        title={t["group.delete"]}
                       >
                         <Trash size={14} />
                       </button>
@@ -232,7 +234,7 @@ export function GroupSection({
                     onClick={() => onToggleFavorite(conn)}
                     className="p-1 rounded transition-colors hover:bg-[var(--bg-tertiary)]"
                     style={{ color: conn.favorite ? "var(--accent)" : "var(--text-secondary)" }}
-                    title={conn.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                    title={conn.favorite ? t["group.removeFavorite"] : t["group.addFavorite"]}
                   >
                     <Star size={14} filled={conn.favorite} />
                   </button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "../i18n/provider";
 import type { Group } from "../types";
 
 interface GroupModalProps {
@@ -9,18 +10,21 @@ interface GroupModalProps {
   onClose: () => void;
 }
 
-const colorOptions = [
-  { value: "#F37C7C", label: "Czerwony" },
-  { value: "#5DA6EA", label: "Niebieski" },
-  { value: "#9DD99A", label: "Zielony" },
-  { value: "#B9A0F8", label: "Fioletowy" },
-  { value: "#E8C547", label: "Zolty" },
-  { value: "#F0A060", label: "Pomaranczowy" },
+const colorValues = [
+  { value: "#F37C7C", key: "group.colorRed" },
+  { value: "#5DA6EA", key: "group.colorBlue" },
+  { value: "#9DD99A", key: "group.colorGreen" },
+  { value: "#B9A0F8", key: "group.colorPurple" },
+  { value: "#E8C547", key: "group.colorYellow" },
+  { value: "#F0A060", key: "group.colorOrange" },
 ];
 
 export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(group?.name ?? "");
-  const [color, setColor] = useState(group?.color ?? colorOptions[0].value);
+  const [color, setColor] = useState(group?.color ?? colorValues[0].value);
+
+  const colorOptions = colorValues.map((c) => ({ ...c, label: t[c.key] }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +59,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
             className="text-sm font-semibold"
             style={{ color: "var(--text-primary)" }}
           >
-            {mode === "add" ? "Nowa grupa" : "Edytuj grupe"}
+            {mode === "add" ? t["group.new"] : t["group.editTitle"]}
           </h2>
           <button onClick={onClose} style={{ color: "var(--text-secondary)" }}>
             <X size={18} />
@@ -68,7 +72,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
               className="block text-xs font-medium mb-1"
               style={{ color: "var(--text-secondary)" }}
             >
-              Nazwa
+              {t["common.name"]}
             </label>
             <input
               type="text"
@@ -85,7 +89,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
               className="block text-xs font-medium mb-1"
               style={{ color: "var(--text-secondary)" }}
             >
-              Kolor
+              {t["group.color"]}
             </label>
             <div className="flex items-center gap-2 flex-wrap">
               {colorOptions.map((opt) => (
@@ -114,7 +118,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
                       : "transparent",
                   transform: !colorOptions.some((o) => o.value === color) ? "scale(1.15)" : "scale(1)",
                 }}
-                title="Własny kolor"
+                title={t["group.customColor"]}
               >
                 {!colorOptions.some((o) => o.value === color) ? (
                   <div
@@ -157,7 +161,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
                 color: "var(--text-secondary)",
               }}
             >
-              Anuluj
+              {t["common.cancel"]}
             </button>
             <button
               type="submit"
@@ -167,7 +171,7 @@ export function GroupModal({ mode, group, onSave, onClose }: GroupModalProps) {
                 color: "var(--bg-primary)",
               }}
             >
-              {mode === "add" ? "Dodaj" : "Zapisz"}
+              {mode === "add" ? t["common.add"] : t["common.save"]}
             </button>
           </div>
         </form>
