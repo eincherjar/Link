@@ -52,6 +52,7 @@ export const en: Record<string, string> = {
   "settings.language": "Language",
   "settings.theme": "Theme",
   "settings.newTheme": "New",
+  "settings.newLang": "+ New",
   "settings.deleteTheme": "Delete theme",
   "settings.themeName": "Theme name",
   "settings.themeCopy": "(copy)",

@@ -52,6 +52,7 @@ export const pl: Record<string, string> = {
   "settings.language": "Język",
   "settings.theme": "Motyw",
   "settings.newTheme": "Nowy",
+  "settings.newLang": "+ Nowy",
   "settings.deleteTheme": "Usuń motyw",
   "settings.themeName": "Nazwa motywu",
   "settings.themeCopy": "(kopie)",
