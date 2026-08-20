@@ -367,7 +367,7 @@ export function SettingsModal({
                 >
                   <option value="pl">{t["lang.pl"]}</option>
                   <option value="en">{t["lang.en"]}</option>
-                  <option value="__new__">+ {t["settings.newLang"]}</option>
+                  <option value="__new__">{t["settings.newLang"]}</option>
                 </select>
               </div>
             </div>
