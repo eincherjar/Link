@@ -5,7 +5,7 @@ import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { ThemeConfig, Connection, Group } from "../types";
 import type { Language } from "../i18n/provider";
-import { useTranslation } from "../i18n/provider";
+import { useTranslation, getAllBuiltinKeys } from "../i18n/provider";
 
 interface SettingsModalProps {
   activeTheme: ThemeConfig;
@@ -232,6 +232,7 @@ export function SettingsModal({
   const [showEditor, setShowEditor] = useState(false);
   const [editorBase, setEditorBase] = useState<ThemeConfig>(activeTheme);
   const [showTranslations, setShowTranslations] = useState(false);
+  const [editingLangName, setEditingLangName] = useState("");
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
@@ -345,21 +346,86 @@ export function SettingsModal({
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm" style={labelStyle}>{t["settings.language"]}</span>
-              <select
-                value={lang}
-                onChange={(e) => onLangChange(e.target.value)}
-                className="px-2 py-1 rounded-lg text-xs border outline-none"
-                style={{
-                  backgroundColor: "var(--bg-tertiary)",
-                  borderColor: "var(--border)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                <option value="pl">{t["lang.pl"]}</option>
-                <option value="en">{t["lang.en"]}</option>
-              </select>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={lang}
+                  onChange={(e) => onLangChange(e.target.value)}
+                  className="px-2 py-1 rounded-lg text-xs border outline-none"
+                  style={{
+                    backgroundColor: "var(--bg-tertiary)",
+                    borderColor: "var(--border)",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="pl">{t["lang.pl"]}</option>
+                  <option value="en">{t["lang.en"]}</option>
+                </select>
+                <button
+                  onClick={() => {
+                    const name = prompt("Nazwa języka / Language name:");
+                    if (name) {
+                      const id = `custom-${name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+                      setEditingLangName(name);
+                      onLangChange(id);
+                      setShowTranslations(true);
+                    }
+                  }}
+                  className="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
+                  style={btnStyle}
+                >
+                  + {t["settings.newTheme"]}
+                </button>
+              </div>
             </div>
           </div>
+
+          {showTranslations && (
+            <>
+              <div className="w-full h-px" style={{ backgroundColor: "var(--border)" }} />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                    {editingLangName || lang} — {Object.keys(customTranslations).length} kluczy
+                  </span>
+                  <button
+                    onClick={() => {
+                      const name = prompt("Nazwa języka / Language name:", editingLangName);
+                      if (name) setEditingLangName(name);
+                    }}
+                    className="text-xs"
+                    style={{ color: "var(--accent-blue)" }}
+                  >
+                    Zmień nazwę
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                  {getAllBuiltinKeys().map(({ key, pl: plVal, en: enVal }) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span className="text-xs shrink-0 w-36 truncate" style={{ color: "var(--text-secondary)" }} title={key}>
+                        {key}
+                      </span>
+                      <input
+                        type="text"
+                        value={customTranslations[key] ?? ""}
+                        onChange={(e) => {
+                          const updated = { ...customTranslations, [key]: e.target.value };
+                          if (!e.target.value) delete updated[key];
+                          onCustomTranslationsChange(updated);
+                        }}
+                        className="flex-1 px-2 py-1 rounded text-xs border outline-none"
+                        style={{
+                          backgroundColor: "var(--bg-primary)",
+                          borderColor: "var(--border)",
+                          color: "var(--text-primary)",
+                        }}
+                        placeholder={lang === "en" ? enVal : plVal}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           <div
             className="w-full h-px"
@@ -500,48 +566,6 @@ export function SettingsModal({
               <Upload size={12} /> {t["settings.importThemes"]}
             </button>
           </div>
-
-          {lang !== "pl" && lang !== "en" && (
-            <>
-              <div className="w-full h-px" style={{ backgroundColor: "var(--border)" }} />
-              <div>
-                <button
-                  onClick={() => setShowTranslations(!showTranslations)}
-                  className="text-xs font-medium mb-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  Tłumaczenia ({Object.keys(customTranslations).length} {lang})
-                </button>
-                {showTranslations && (
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {Object.entries(t).map(([key, val]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <span className="text-xs shrink-0 w-32 truncate" style={{ color: "var(--text-secondary)" }}>
-                          {key}
-                        </span>
-                        <input
-                          type="text"
-                          value={customTranslations[key] ?? ""}
-                          onChange={(e) => {
-                            const updated = { ...customTranslations, [key]: e.target.value };
-                            if (!e.target.value) delete updated[key];
-                            onCustomTranslationsChange(updated);
-                          }}
-                          className="flex-1 px-2 py-1 rounded text-xs border outline-none"
-                          style={{
-                            backgroundColor: "var(--bg-primary)",
-                            borderColor: "var(--border)",
-                            color: "var(--text-primary)",
-                          }}
-                          placeholder={String(val)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>
