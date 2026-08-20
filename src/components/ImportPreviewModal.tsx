@@ -31,22 +31,12 @@ export function ImportPreviewModal({
   }, [importedConnections, currentKeys]);
 
   const summary = useMemo(() => {
-    let added = 0;
-    let replaced = 0;
-    let skipped = 0;
-
     if (strategy === "replace") {
-      added = importedConnections.length;
-      replaced = analysis.duplicates.length;
-    } else if (strategy === "merge") {
-      added = analysis.newItems.length;
-      skipped = analysis.duplicates.length;
-    } else {
-      added = analysis.newItems.length;
-      skipped = analysis.duplicates.length;
+      return { added: 0, replaced: importedConnections.length, skipped: 0 };
     }
-
-    return { added, replaced, skipped };
+    const added = analysis.newItems.length;
+    const skipped = analysis.duplicates.length;
+    return { added, replaced: 0, skipped };
   }, [strategy, analysis, importedConnections]);
 
   const previewList = useMemo(() => {
