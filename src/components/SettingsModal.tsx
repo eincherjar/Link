@@ -3,9 +3,11 @@ import { X, Trash2, Download, Upload, Palette } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { save, open } from "@tauri-apps/plugin-dialog";
+import { connectionKey, type ImportStrategy } from "../types";
 import type { ThemeConfig, Connection, Group } from "../types";
 import type { Language } from "../i18n/provider";
 import { useTranslation, getAllBuiltinKeys } from "../i18n/provider";
+import { ImportPreviewModal } from "./ImportPreviewModal";
 
 interface SettingsModalProps {
   activeTheme: ThemeConfig;
@@ -25,6 +27,7 @@ interface SettingsModalProps {
   connections: Connection[];
   groups: Group[];
   onImport: (connections: Connection[], groups: Group[]) => void;
+  onClearAll: () => void;
 }
 
 function Toggle({
@@ -223,6 +226,7 @@ export function SettingsModal({
   connections,
   groups,
   onImport,
+  onClearAll,
 }: SettingsModalProps) {
   const { t } = useTranslation();
   const [autostart, setAutostart] = useState(false);
@@ -234,6 +238,7 @@ export function SettingsModal({
   const [showTranslations, setShowTranslations] = useState(false);
   const [editingLangName, setEditingLangName] = useState("");
   const [showLangInput, setShowLangInput] = useState(false);
+  const [importPreview, setImportPreview] = useState<Connection[] | null>(null);
 
   useEffect(() => {
     isEnabled().then(setAutostart).catch(() => {});
@@ -276,10 +281,26 @@ export function SettingsModal({
     if (selected) {
       const contents: string = await invoke("import_data", { path: selected });
       const data = JSON.parse(contents);
-      if (data.connections && data.groups) {
-        onImport(data.connections, data.groups);
+      if (data.connections) {
+        setImportPreview(data.connections);
       }
     }
+  };
+
+  const handleImportConfirm = (strategy: ImportStrategy) => {
+    if (!importPreview) return;
+
+    if (strategy === "replace") {
+      onImport(importPreview, []);
+    } else {
+      const existingKeys = new Set(connections.map(connectionKey));
+      const newConns = strategy === "merge"
+        ? [...connections, ...importPreview.filter((c) => !existingKeys.has(connectionKey(c)))]
+        : [...connections, ...importPreview.filter((c) => !existingKeys.has(connectionKey(c)))];
+      onImport(newConns, groups);
+    }
+
+    setImportPreview(null);
   };
 
   const handleExportThemes = async () => {
@@ -318,6 +339,7 @@ export function SettingsModal({
   };
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -626,8 +648,41 @@ export function SettingsModal({
               <Upload size={12} /> {t["settings.importThemes"]}
             </button>
           </div>
+
+          <div
+            className="w-full h-px"
+            style={{ backgroundColor: "var(--border)" }}
+          />
+
+          <div>
+            <button
+              onClick={() => {
+                if (window.confirm(t["settings.clearAllConfirm"])) {
+                  onClearAll();
+                }
+              }}
+              className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+              style={{
+                backgroundColor: "var(--accent-red)",
+                color: "var(--bg-primary)",
+              }}
+            >
+              <Trash2 size={12} className="inline mr-1.5" />
+              {t["settings.clearAll"]}
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    {importPreview && (
+      <ImportPreviewModal
+        currentConnections={connections}
+        importedConnections={importPreview}
+        onConfirm={handleImportConfirm}
+        onClose={() => setImportPreview(null)}
+      />
+    )}
+    </>
   );
 }

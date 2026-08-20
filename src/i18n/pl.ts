@@ -98,6 +98,30 @@ export const pl: Record<string, string> = {
   // Empty state
   "empty.noConnections": "Brak pasujących połączeń",
 
+  // Import preview
+  "import.title": "Podgląd importu",
+  "import.currentConnections": "Aktualne połączenia",
+  "import.importedConnections": "Importowane połączenia",
+  "import.new": "Nowe",
+  "import.duplicate": "Duplikat",
+  "import.willBeReplaced": "Zostanie zastąpione",
+  "import.willBeSkipped": "Zostanie pominięte",
+  "import.noChanges": "Brak zmian",
+  "import.strategy": "Strategia importu",
+  "import.replace": "Zastąp wszystko",
+  "import.replaceDesc": "Usunie aktualne dane i zastąpi je importowanymi",
+  "import.merge": "Dodaj do istniejących",
+  "import.mergeDesc": "Doda nowe, pomija istniejące duplikaty",
+  "import.skip": "Pominij duplikaty",
+  "import.skipDesc": "Dodaje tylko nowe, istniejące pozostają bez zmian",
+  "import.confirm": "Importuj",
+  "import.summary": "Dodano: {{added}}, Zastąpiono: {{replaced}}, Pominięto: {{skipped}}",
+
+  // Clear all
+  "settings.clearAll": "Wyczyść wszystko",
+  "settings.clearAllConfirm": "Na pewno chcesz usunąć wszystkie połączenia i grupy? Tej operacji nie można cofnąć.",
+  "settings.cleared": "Wszystkie dane zostały usunięte",
+
   // Language names
   "lang.pl": "Polski",
   "lang.en": "English",

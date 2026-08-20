@@ -22,9 +22,9 @@ Zarządzaj swoimi połączeniami zdalnymi z jednego miejsca. Szybki, lekki, z豐
 |:---:|:---:|
 | ![Dark](screenshots/dark.png) | ![Purple](screenshots/purple.png) |
 
-| Zarządzanie połączeniami | Edytor motywów |
+| Zarządzanie połączeniami | Edytor motywów | Nowe połączenie | Nowa grupa |
 |:---:|:---:|
-| ![Connections](screenshots/connections.png) | ![Theme Editor](screenshots/theme-editor.png) |
+| ![Connections](screenshots/connections.png) | ![Theme Editor](screenshots/theme-editor.png) | ![Theme Editor](screenshots/new-connection.png) | ![Theme Editor](screenshots/new-group.png) |
 
 ---
 

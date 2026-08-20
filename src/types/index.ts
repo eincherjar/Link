@@ -48,3 +48,10 @@ export interface ThemeConfig {
 }
 
 export type Theme = "dark" | "light";
+
+export function connectionKey(c: { protocol: string; host: string; port: number; username: string }): string {
+  return `${c.protocol}://${c.username}@${c.host}:${c.port}`;
+}
+
+export type ImportStrategy = "replace" | "merge" | "skip";
+

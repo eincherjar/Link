@@ -98,6 +98,30 @@ export const en: Record<string, string> = {
   // Empty state
   "empty.noConnections": "No matching connections",
 
+  // Import preview
+  "import.title": "Import Preview",
+  "import.currentConnections": "Current connections",
+  "import.importedConnections": "Imported connections",
+  "import.new": "New",
+  "import.duplicate": "Duplicate",
+  "import.willBeReplaced": "Will be replaced",
+  "import.willBeSkipped": "Will be skipped",
+  "import.noChanges": "No changes",
+  "import.strategy": "Import strategy",
+  "import.replace": "Replace all",
+  "import.replaceDesc": "Removes current data and replaces with imported",
+  "import.merge": "Add to existing",
+  "import.mergeDesc": "Adds new, skips existing duplicates",
+  "import.skip": "Skip duplicates",
+  "import.skipDesc": "Adds only new, existing unchanged",
+  "import.confirm": "Import",
+  "import.summary": "Added: {{added}}, Replaced: {{replaced}}, Skipped: {{skipped}}",
+
+  // Clear all
+  "settings.clearAll": "Clear all",
+  "settings.clearAllConfirm": "Are you sure you want to delete all connections and groups? This cannot be undone.",
+  "settings.cleared": "All data has been deleted",
+
   // Language names
   "lang.pl": "Polski",
   "lang.en": "English",

@@ -367,7 +367,12 @@ function AppInner() {
           groups={groups}
           onImport={(newConns, newGroups) => {
             setConnections(newConns);
-            setGroups(newGroups);
+            if (newGroups.length > 0) setGroups(newGroups);
+            setSettingsOpen(false);
+          }}
+          onClearAll={() => {
+            setConnections([]);
+            setGroups([]);
             setSettingsOpen(false);
           }}
         />
