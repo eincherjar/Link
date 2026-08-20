@@ -149,8 +149,9 @@ function AppInner() {
 
   const groupedConnections = useMemo(() => {
     const map = new Map<string, Connection[]>();
+    const groupIds = new Set(groups.map((g) => g.id));
     for (const conn of filteredConnections) {
-      const gid = conn.groupId ?? "__ungrouped";
+      const gid = conn.groupId && groupIds.has(conn.groupId) ? conn.groupId : "__ungrouped";
       if (!map.has(gid)) map.set(gid, []);
       map.get(gid)!.push(conn);
     }
@@ -158,7 +159,7 @@ function AppInner() {
       conns.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
     }
     return map;
-  }, [filteredConnections]);
+  }, [filteredConnections, groups]);
 
   const handleSaveConnection = (
     data: Omit<Connection, "id"> & { id?: string },
