@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::os::windows::process::CommandExt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::Manager;
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
@@ -57,27 +58,38 @@ fn set_close_to_tray(state: tauri::State<AppState>, value: bool) {
 
 #[tauri::command]
 fn connect_rdp(host: String, port: u16, username: String, password: String) -> Result<(), String> {
-    let target = format!("TERMSRV/{}:{}", host, port);
-
-    std::process::Command::new("cmdkey")
-        .args([&target, &format!("/user:{}", username), &format!("/pass:{}", password)])
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("Nie udało się uruchomić cmdkey: {}", e))?;
-
-    let address = format!("{}:{}", host, port);
-    std::process::Command::new("mstsc.exe")
-        .args([&format!("/v:{}", address)])
-        .spawn()
-        .map_err(|e| format!("Nie udało się uruchomić mstsc.exe: {}", e))?;
-
-    let target_cleanup = target.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_secs(5));
+        let target = format!("TERMSRV/{}:{}", host, port);
+
         let _ = std::process::Command::new("cmdkey")
-            .args(["/delete:", &target_cleanup])
-            .output();
+            .args([&format!("/delete:{}", target)])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .creation_flags(0x08000000)
+            .spawn()
+            .and_then(|mut c| c.wait());
+
+        let _ = std::process::Command::new("cmdkey")
+            .args([&target, &format!("/user:{}", username), &format!("/pass:{}", password)])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .creation_flags(0x08000000)
+            .spawn()
+            .and_then(|mut c| c.wait());
+
+        let address = format!("{}:{}", host, port);
+        let _ = std::process::Command::new("mstsc.exe")
+            .args([&format!("/v:{}", address)])
+            .spawn();
+
+        std::thread::sleep(std::time::Duration::from_secs(10));
+        let _ = std::process::Command::new("cmdkey")
+            .args([&format!("/delete:{}", target)])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .creation_flags(0x08000000)
+            .spawn()
+            .and_then(|mut c| c.wait());
     });
 
     Ok(())
